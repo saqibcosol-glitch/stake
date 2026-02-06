@@ -44,8 +44,12 @@ export const useWalletStats = (shouldPoll = true, pollInterval = 30000): WalletS
     const [liveReferralRewards, setLiveReferralRewards] = useState('0.0000');
 
     const fetchData = useCallback(async () => {
-        if (!publicKey || !connection) return;
+        if (!publicKey || !connection) {
+            console.log("WalletStats: No public key or connection", { publicKey, connection });
+            return;
+        }
 
+        console.log("WalletStats: Fetching data for", publicKey.toString());
         setLoading(true);
         try {
             const wallet = {
@@ -54,15 +58,24 @@ export const useWalletStats = (shouldPoll = true, pollInterval = 30000): WalletS
                 signAllTransactions: signAllTransactions || (() => { }),
             };
             const program = getProgram(connection, wallet as any);
+            console.log("WalletStats: Program initialized", program.programId.toString());
 
-            // Fetch all in parallel
+            // Fetch individually to better catch specific errors
+            const solPromise = fetchSolBalance(connection, publicKey).catch(e => { console.error("Err fetching SOL:", e); return 0; });
+            const poolPromise = fetchStakingPool(program, config.tokenAddress).catch(e => { console.error("Err fetching Pool:", e); return null; });
+            const userStakePromise = fetchUserStake(program, publicKey, config.tokenAddress).catch(e => { console.error("Err fetching UserStake:", e); return null; });
+            const balancePromise = fetchUserTokenBalance(connection, publicKey, config.tokenAddress).catch(e => { console.error("Err fetching TokenBalance:", e); return null; });
+            const refStatsPromise = fetchReferrerStats(program, publicKey).catch(e => { console.error("Err fetching RefStats:", e); return null; });
+
             const [sol, pool, userStake, balance, refStats] = await Promise.all([
-                fetchSolBalance(connection, publicKey),
-                fetchStakingPool(program, config.tokenAddress),
-                fetchUserStake(program, publicKey, config.tokenAddress),
-                fetchUserTokenBalance(connection, publicKey, config.tokenAddress),
-                fetchReferrerStats(program, publicKey)
+                solPromise,
+                poolPromise,
+                userStakePromise,
+                balancePromise,
+                refStatsPromise
             ]);
+
+            console.log("WalletStats: Fetched Data", { sol, pool, userStake, balance, refStats });
 
             setStats({
                 solBalance: sol || 0,
@@ -72,7 +85,7 @@ export const useWalletStats = (shouldPoll = true, pollInterval = 30000): WalletS
                 referrerStats: refStats
             });
         } catch (error) {
-            console.error('Error fetching wallet stats:', error);
+            console.error('CRITICAL Error fetching wallet stats:', error);
         } finally {
             setLoading(false);
         }
