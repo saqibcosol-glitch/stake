@@ -40,4 +40,11 @@
     "tailwindcss": "^3.3.6",
     "typescript": "^5.3.2"
   }
+},
+"overrides": {
+  "@solana/spl-token": "^0.3.11",
+  "@jup-ag/plugin": {
+    "@solana/spl-token": "^0.3.11"
+  }
+}
 }
