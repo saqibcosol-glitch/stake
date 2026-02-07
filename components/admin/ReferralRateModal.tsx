@@ -24,6 +24,10 @@ export const ReferralRateModal: React.FC<ReferralRateModalProps> = ({ isOpen, on
 
     const handleUpdateReferralRates = async () => {
         if (!publicKey) return;
+        if (!signTransaction || !signAllTransactions) {
+            toast.error('Wallet does not support signing');
+            return;
+        }
 
         const totalRate = parseInt(rateL1 || '0') + parseInt(rateL2 || '0') + parseInt(rateL3 || '0');
         if (totalRate > 25) {

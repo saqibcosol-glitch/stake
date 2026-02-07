@@ -26,6 +26,10 @@ export const LockDurationModal: React.FC<LockDurationModalProps> = ({ isOpen, on
             toast.error('Please enter lock duration');
             return;
         }
+        if (!signTransaction || !signAllTransactions) {
+            toast.error('Wallet does not support signing');
+            return;
+        }
 
         setLoading(true);
         try {
