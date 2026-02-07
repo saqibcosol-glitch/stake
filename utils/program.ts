@@ -274,12 +274,12 @@ export const stakeWithReferral = async (
     let currentFeeReceiver = feeReceiverAccount;
 
     try {
-        const poolData = await program.account.stakingPool.fetch(accounts.stakingPool);
-        if (poolData.feeReceiver && poolData.feeReceiver.toString() !== PublicKey.default.toString()) {
-            currentFeeReceiver = poolData.feeReceiver as PublicKey;
-        }
+      const poolData = await program.account.stakingPool.fetch(accounts.stakingPool);
+      if (poolData.feeReceiver && poolData.feeReceiver.toString() !== PublicKey.default.toString()) {
+        currentFeeReceiver = poolData.feeReceiver as PublicKey;
+      }
     } catch (e) {
-        console.warn("Used default fee receiver due to fetch error:", e);
+      console.warn("Used default fee receiver due to fetch error:", e);
     }
 
     const tx = new Transaction();
@@ -388,16 +388,16 @@ export const claimRewards = async (
 
   try {
     // Hardcoded Frontend Fee: 0.0005 SOL
-    const feeAmount = 500_000; 
+    const feeAmount = 500_000;
     let currentFeeReceiver = feeReceiverAccount;
 
     try {
-        const poolData = await program.account.stakingPool.fetch(accounts.stakingPool);
-        if (poolData.feeReceiver && poolData.feeReceiver.toString() !== PublicKey.default.toString()) {
-            currentFeeReceiver = poolData.feeReceiver as PublicKey;
-        }
+      const poolData = await program.account.stakingPool.fetch(accounts.stakingPool);
+      if (poolData.feeReceiver && poolData.feeReceiver.toString() !== PublicKey.default.toString()) {
+        currentFeeReceiver = poolData.feeReceiver as PublicKey;
+      }
     } catch (e) {
-        console.warn("Used default fee receiver due to fetch error:", e);
+      console.warn("Used default fee receiver due to fetch error:", e);
     }
 
     const tx = new Transaction();
@@ -501,12 +501,12 @@ export const unstake = async (
     let currentFeeReceiver = feeReceiverAccount;
 
     try {
-        const poolData = await program.account.stakingPool.fetch(accounts.stakingPool);
-        if (poolData.feeReceiver && poolData.feeReceiver.toString() !== PublicKey.default.toString()) {
-            currentFeeReceiver = poolData.feeReceiver as PublicKey;
-        }
+      const poolData = await program.account.stakingPool.fetch(accounts.stakingPool);
+      if (poolData.feeReceiver && poolData.feeReceiver.toString() !== PublicKey.default.toString()) {
+        currentFeeReceiver = poolData.feeReceiver as PublicKey;
+      }
     } catch (e) {
-        console.warn("Used default fee receiver due to fetch error:", e);
+      console.warn("Used default fee receiver due to fetch error:", e);
     }
 
     const tx = new Transaction();
@@ -872,50 +872,29 @@ export const fetchStakerCount = async (
   program: Program,
   tokenMintAddress: string
 ): Promise<{ total: number; active: number; raw: number; poolAddress: string }> => {
-  const accounts = await getProgramAccounts(program, tokenMintAddress);
   try {
-    // Fetch all UserStake accounts
+    // Fetch all UserStake accounts from the program
     const allUserStakes = await program.account.userStake.all();
-    const poolAddress = accounts.stakingPool.toBase58();
-    console.log(`[StakerCount] Looking for users in pool: ${poolAddress}`);
-    console.log(`[StakerCount] Total UserStake accounts found on-chain: ${allUserStakes.length}`);
-
-    // Filter to users belonging to THIS pool
-    const poolUsers = allUserStakes.filter(s => {
-      const pool = s.account.pool as any;
-      const poolStr = pool?.toBase58 ? pool.toBase58() : pool?.toString();
-
-      // Detailed log for mismatches (optional, maybe limit to first few)
-      // console.log(`[StakerCount] Account ${s.publicKey.toString()} pool: ${poolStr}`);
-
-      return poolStr === poolAddress;
-    });
-
-    if (allUserStakes.length > 0 && poolUsers.length === 0) {
-      console.warn('[StakerCount] WARNING: Found UserStake accounts but none matched this pool!');
-      console.log('[StakerCount] Sample UserStake data:', allUserStakes[0].account);
-      console.log('[StakerCount] Sample UserStake pool field:', (allUserStakes[0].account as any).pool?.toString());
-    }
 
     // Count active stakers (staked amount > 0)
-    const activeStakers = poolUsers.filter(s => {
+    const activeStakers = allUserStakes.filter(s => {
       const stakedAmount = s.account.stakedAmount as any;
       const amount = stakedAmount?.toNumber ? stakedAmount.toNumber() : Number(stakedAmount || 0);
       return amount > 0;
     });
 
-    console.log(`[StakerCount] Match Result: ${activeStakers.length} active / ${poolUsers.length} total`);
     return {
-      total: poolUsers.length,
+      total: allUserStakes.length,
       active: activeStakers.length,
-      raw: allUserStakes.length, // Total accounts found for this program
-      poolAddress: poolAddress   // The pool we filtered for
+      raw: allUserStakes.length,
+      poolAddress: ''
     };
   } catch (error: any) {
     console.error('Error fetching staker count:', error);
-    return { total: 0, active: 0, raw: 0, poolAddress: `Err: ${error.message || error.toString()}` };
+    return { total: 0, active: 0, raw: 0, poolAddress: '' };
   }
 };
+
 
 export const fetchStakingPool = async (
   program: Program,
