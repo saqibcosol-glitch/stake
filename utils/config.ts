@@ -3,11 +3,12 @@ import { clusterApiUrl } from '@solana/web3.js';
 
 export const getConfig = (): AppConfig => {
   return {
-    programId: process.env.NEXT_PUBLIC_PROGRAM_ID || '5YNT6aKnnaDsUC7PYw3AJoe5GSjK9Gc76Ro79EMMWVSY',
-    tokenAddress: process.env.NEXT_PUBLIC_TOKEN_ADDRESS || 'GEF1NPkok8EpZQP2D9Qxxf5ULiSUHTJDz8X9gtG4PrvV',
-    rewardTokenAddress: process.env.NEXT_PUBLIC_REWARD_TOKEN_ADDRESS || process.env.NEXT_PUBLIC_TOKEN_ADDRESS || 'GEF1NPkok8EpZQP2D9Qxxf5ULiSUHTJDz8X9gtG4PrvV',
-    adminAddress: process.env.NEXT_PUBLIC_ADMIN || '',
+    programId: (process.env.NEXT_PUBLIC_PROGRAM_ID || '5YNT6aKnnaDsUC7PYw3AJoe5GSjK9Gc76Ro79EMMWVSY').trim(),
+    tokenAddress: (process.env.NEXT_PUBLIC_TOKEN_ADDRESS || 'GEF1NPkok8EpZQP2D9Qxxf5ULiSUHTJDz8X9gtG4PrvV').trim(),
+    rewardTokenAddress: (process.env.NEXT_PUBLIC_REWARD_TOKEN_ADDRESS || process.env.NEXT_PUBLIC_TOKEN_ADDRESS || 'GEF1NPkok8EpZQP2D9Qxxf5ULiSUHTJDz8X9gtG4PrvV').trim(),
+    adminAddress: (process.env.NEXT_PUBLIC_ADMIN || '').trim(),
     network: (process.env.NEXT_PUBLIC_ACTIVE_NETWORK as 'devnet' | 'mainnet-beta' | 'testnet') || 'devnet',
+
     tokenName: process.env.NEXT_PUBLIC_TOKEN_NAME || 'CreateOnSol',
     tokenSymbol: process.env.NEXT_PUBLIC_TOKEN_SYMBOL || 'COSOL',
     tokenSupply: process.env.NEXT_PUBLIC_TOKEN_SUPPLY || '100,000,000',
