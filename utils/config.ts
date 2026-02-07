@@ -53,9 +53,5 @@ export const getRpcUrl = (): string => {
 export const isAdmin = (walletAddress: string): boolean => {
   const config = getConfig();
   if (!walletAddress || !config.adminAddress) return false;
-
-  // Debug log to help users verify their admin status in console
-  console.log(`Checking Admin: Wallet [${walletAddress}] vs Config [${config.adminAddress}]`);
-
   return walletAddress.trim() === config.adminAddress.trim();
 };

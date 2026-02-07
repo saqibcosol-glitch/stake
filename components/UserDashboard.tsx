@@ -503,17 +503,7 @@ export const UserDashboard: React.FC = () => {
         </div>
       </Modal>
 
-      {/* DEBUG SECTION - REMOVE AFTER FIXING */}
-      <div className="mt-8 p-4 bg-black/40 border border-red-500/30 rounded-lg text-xs font-mono text-gray-400">
-        <p className="text-red-400 font-bold mb-2">🔧 DEBUG INFO (Take a screenshot if balances are 0)</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          <p>Network: <span className="text-white">{config.network}</span></p>
-          <p>Program ID: <span className="text-white">{config.programId.slice(0, 8)}...</span></p>
-          <p>Admin: <span className="text-white">{config.adminAddress.slice(0, 8)}...</span></p>
-          <p>Token: <span className="text-white">{config.tokenAddress.slice(0, 8)}...</span></p>
-          <p>Wallet Connected: <span className={publicKey ? "text-green-400" : "text-red-400"}>{publicKey ? 'YES' : 'NO'}</span></p>
-        </div>
-      </div>
+
     </div>
   );
 };
