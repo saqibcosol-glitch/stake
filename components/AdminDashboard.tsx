@@ -37,11 +37,8 @@ export const AdminDashboard: React.FC = () => {
   const [walletBalance, setWalletBalance] = useState<number>(0)
   const [solBalance, setSolBalance] = useState<number>(0)
   const [feeReceiverBalance, setFeeReceiverBalance] = useState<number>(0)
-  const [recentFees, setRecentFees] = useState<number>(0)
   const [allTimeFees, setAllTimeFees] = useState<number>(0)
   const [totalUsers, setTotalUsers] = useState<number>(0)
-  const [rawUsers, setRawUsers] = useState<number>(0)
-  const [debugPoolAddress, setDebugPoolAddress] = useState<string>('')
   const [activeStakers, setActiveStakers] = useState<number>(0)
 
   // Modal Visibility States
@@ -79,7 +76,6 @@ export const AdminDashboard: React.FC = () => {
       }
       const program = getProgram(connection, wallet as any)
 
-      console.time('fetchAdminData');
       const [pool, balances, balance, sol, stakerCountResult] = await Promise.all([
         fetchStakingPool(program, config.tokenAddress),
         fetchVaultBalances(program, config.tokenAddress, config.rewardTokenAddress),
@@ -87,15 +83,12 @@ export const AdminDashboard: React.FC = () => {
         fetchSolBalance(connection, publicKey),
         fetchStakerCount(program, config.tokenAddress)
       ]);
-      console.timeEnd('fetchAdminData');
 
       setPoolData(pool)
       setVaultBalances(balances)
       setWalletBalance(balance || 0)
       setSolBalance(sol || 0)
       setTotalUsers(stakerCountResult?.total || 0)
-      setRawUsers(stakerCountResult?.raw || 0)
-      setDebugPoolAddress(stakerCountResult?.poolAddress || '')
       setActiveStakers(stakerCountResult?.active || 0)
 
       // Fetch fee data using admin address from config
@@ -104,7 +97,6 @@ export const AdminDashboard: React.FC = () => {
           const adminPubkey = new PublicKey(config.adminAddress);
           fetchSolBalance(connection, adminPubkey).then(bal => setFeeReceiverBalance(bal || 0));
           fetchFeeHistory(connection, adminPubkey).then(fees => {
-            setRecentFees(fees?.recentFees || 0);
             setAllTimeFees(fees?.allTimeFees || 0);
           });
         } catch (e) {
@@ -290,75 +282,35 @@ export const AdminDashboard: React.FC = () => {
         </Card>
       )}
 
-      {/* Fee & Activity Stats */}
+      {/* Fee & User Stats */}
       {poolData && (
-        <Card title="Fee & Activity Stats" glow className="bg-gradient-to-br from-indigo-900/50 to-purple-900/50">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="bg-black/30 p-4 rounded-lg border border-white/10">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-green-500/20 rounded-lg">
-                  <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <Card title="Platform Statistics" glow className="bg-gradient-to-br from-indigo-900/50 to-purple-900/50">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="bg-black/30 p-6 rounded-lg border border-white/10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 bg-green-500/20 rounded-lg">
+                  <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 </div>
-                <h4 className="text-gray-300 font-medium">Fees Collected</h4>
+                <h4 className="text-lg text-white font-semibold">Total Fees Collected</h4>
               </div>
-              <div>
-                <p className="text-sm text-gray-400">All-Time Total</p>
-                <p className="text-2xl font-bold text-green-400 mb-1">{allTimeFees.toFixed(4)} SOL</p>
-              </div>
-              <div className="mt-2 text-sm border-t border-white/10 pt-2 space-y-1">
-                <p className="text-gray-400 flex justify-between">
-                  Recent (100 txns): <span className="text-white">{recentFees.toFixed(4)} SOL</span>
-                </p>
-                <p className="text-gray-400 flex justify-between">
-                  Current Balance: <span className="text-green-400">{feeReceiverBalance.toFixed(4)} SOL</span>
-                </p>
-              </div>
-              <p className="text-xs text-gray-500 mt-2 truncate">
-                Receiver: {config.adminAddress}
-              </p>
+              <p className="text-4xl font-bold text-green-400 mb-2">{allTimeFees.toFixed(4)} SOL</p>
+              <p className="text-sm text-gray-400">Admin wallet balance: {feeReceiverBalance.toFixed(4)} SOL</p>
             </div>
 
-            <div className="bg-black/30 p-4 rounded-lg border border-white/10">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-blue-500/20 rounded-lg">
-                  <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+            <div className="bg-black/30 p-6 rounded-lg border border-white/10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 bg-blue-500/20 rounded-lg">
+                  <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                 </div>
-                <h4 className="text-gray-300 font-medium">Users</h4>
+                <h4 className="text-lg text-white font-semibold">Total Users</h4>
               </div>
-              <div>
-                <p className="text-sm text-gray-400">Total Registered</p>
-                <p className="text-2xl font-bold text-white pl-1">{totalUsers}</p>
-                <div className="text-xs text-gray-500 mt-1 break-all">
-                  On-Chain (All Pools): {rawUsers}
-                  <br />
-                  Pool: {debugPoolAddress}
-                </div>
-              </div>
-              <div className="mt-2 text-sm border-t border-white/10 pt-2">
-                <p className="text-gray-400 flex justify-between">
-                  Currently Staking: <span className="text-green-400">{activeStakers}</span>
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-black/30 p-4 rounded-lg border border-white/10">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-purple-500/20 rounded-lg">
-                  <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                </div>
-                <h4 className="text-gray-300 font-medium">Rate Config (Frontend)</h4>
-              </div>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between"><span className="text-gray-400">Stake:</span> <span className="text-white">0.001 SOL</span></div>
-                <div className="flex justify-between"><span className="text-gray-400">Unstake:</span> <span className="text-white">0.008 SOL</span></div>
-                <div className="flex justify-between"><span className="text-gray-400">Claim Rewards:</span> <span className="text-white">0.0005 SOL</span></div>
-                <div className="flex justify-between"><span className="text-gray-400">Init Referral:</span> <span className="text-white">0.0005 SOL</span></div>
-                <div className="flex justify-between"><span className="text-gray-400">Claim Referral:</span> <span className="text-white">0.0005 SOL</span></div>
-              </div>
+              <p className="text-4xl font-bold text-white mb-2">{totalUsers}</p>
+              <p className="text-sm text-gray-400">Active stakers: <span className="text-green-400">{activeStakers}</span></p>
             </div>
           </div>
         </Card>
       )}
+
 
       {/* Admin Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
