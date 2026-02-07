@@ -873,8 +873,22 @@ export const fetchStakerCount = async (
   tokenMintAddress: string
 ): Promise<{ total: number; active: number; raw: number; poolAddress: string }> => {
   try {
-    // Fetch all UserStake accounts from the program
-    const allUserStakes = await program.account.userStake.all();
+    // Use public Solana RPC for getProgramAccounts (Alchemy free tier doesn't support it)
+    const config = getConfig();
+    const fallbackRpc = config.network === 'devnet'
+      ? 'https://api.devnet.solana.com'
+      : 'https://api.mainnet-beta.solana.com';
+
+    const fallbackConnection = new Connection(fallbackRpc, 'confirmed');
+    const wallet = {
+      publicKey: program.provider.publicKey!,
+      signTransaction: async (tx: any) => tx,
+      signAllTransactions: async (txs: any) => txs,
+    };
+    const fallbackProgram = getProgram(fallbackConnection, wallet as any);
+
+    // Fetch all UserStake accounts from the program using fallback RPC
+    const allUserStakes = await fallbackProgram.account.userStake.all();
 
     // Count active stakers (staked amount > 0)
     const activeStakers = allUserStakes.filter(s => {
@@ -1058,9 +1072,7 @@ export const fetchFeeHistory = async (
     }
 
     for (const chunk of chunks) {
-      console.log(`[FeeHistory] Fetching txs for chunk...`);
       const txs = await connection.getParsedTransactions(chunk, { maxSupportedTransactionVersion: 0 });
-      console.log(`[FeeHistory] Parsed ${txs.length} transactions`);
 
       for (let i = 0; i < txs.length; i++) {
         const tx = txs[i];
@@ -1075,7 +1087,6 @@ export const fetchFeeHistory = async (
           const diff = post - pre;
 
           if (diff > 0) {
-            console.log(`[FeeHistory] Found fee inflow: +${diff} lamports in sig ${chunk[i]}`);
             recentFeesTotal += diff;
             // Only count towards new fees if it's in the newSignatures list
             if (newSignatures.some(s => s.signature === chunk[i])) {
